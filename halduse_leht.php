@@ -11,6 +11,18 @@ if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"]) && is_admin(
     $yhendus->close();
     exit();
 }
+if (isset($_REQUEST["komment"])){
+    if (isset($_REQUEST["uuskomment"]) && !empty($_REQUEST["paarinimi"]) && is_admin()){
+        global $yhendus;
+        $kask=$yhendus->prepare("update tantsud set kommentaarid = CONCAT(kommentaarid, ?) where id=?");
+        $kommentplus=$_REQUEST["uuskomment"]."\n";
+        $kask->bind_param("is", $kommentplus, $_REQUEST["komment"]);
+        $kask->execute();
+        header("Location: $_SERVER[PHP_SELF]");
+        $yhendus->close();
+        exit();
+    }
+}
 if (isset($_REQUEST["heatants"])){
     global $yhendus;
     $kask=$yhendus->prepare("update tantsud set punktid=punktid+1 where id = ?");
@@ -84,11 +96,12 @@ function is_admin(){
         <th>Tantsuspaari nimi</th>
         <th>Punktid</th>
         <th>Date</th>
+        <th>Komment</th>
     </tr>
 <?php
 global $yhendus;
-    $kask=$yhendus->prepare("select id, tantsuspar, punktid, ava_paev from tantsud where avalik = 1");
-    $kask->bind_result($id, $tantsuspar, $punktid, $ava_paev);
+    $kask=$yhendus->prepare("select id, tantsuspar, punktid, ava_paev, kommentaarid from tantsud where avalik = 1");
+    $kask->bind_result($id, $tantsuspar, $punktid, $ava_paev, $kommentaarid);
     $kask->execute();
 
     while($kask->fetch()){
@@ -97,9 +110,19 @@ global $yhendus;
         echo "<td>", $tantsuspar, "</td>";
         echo "<td>", $punktid, "</td>";
         echo "<td>", $ava_paev, "</td>";
+        echo "<td>", $kommentaarid, "</td>";
+        $kommentaarid = nl2br(htmlspecialchars($kommentaarid));
         if (!is_admin()){
             echo "<td><a href='?heatants=$id'>+1</a></td>";
             echo "<td><a href='?bad=$id'>-1</a></td>";
+            echo "<td>
+                    <form action='?'>
+                    <input type='hidden' value='$id' name='komment' >
+                        <input type='text' name='uuskomment' id='uuskomment'>
+                        <input type='submit' value='OK'>
+                    </form>
+                    </td>
+                    ";
         }
         echo "<td><a href='?delpaarinimi=$id'>delete</a></td>";
         echo "<tr>";
@@ -118,10 +141,5 @@ global $yhendus;
 <?php } ?>
 
 </table>
-<div>
-    <?php if (!isset($_SESSION['kasutaja'])){ ?>
-        <img src="meme.png" alt="meme">
-    <?php } ?>
-</div>
 </body>
 </html>
