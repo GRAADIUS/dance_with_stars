@@ -1,34 +1,6 @@
 <?php
 require ('conf.php');
-if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"])){
-    global $yhendus;
-    $kask=$yhendus->prepare("insert into tantsud (tantsuspar, ava_paev) values(?, now())");
-    $kask->bind_param("s", $_REQUEST["paarinimi"]);
-    $kask->execute();
-    header("Location: $_SERVER[PHP_SELF]");
-    $yhendus->close();
-    exit();
-}
-
-if (isset($_REQUEST["heatants"])){
-    global $yhendus;
-    $kask=$yhendus->prepare("update tantsud set punktid=punktid+1 where id = ?");
-    $kask->bind_param("i", $_REQUEST["heatants"]);
-    $kask->execute();
-    header("Location: $_SERVER[PHP_SELF]");
-    $yhendus->close();
-    exit();
-}
-
-if (isset($_REQUEST["bad"])){
-    global $yhendus;
-    $kask=$yhendus->prepare("update tantsud set punktid=punktid-1 where id = ?");
-    $kask->bind_param("i", $_REQUEST["bad"]);
-    $kask->execute();
-    header("Location: $_SERVER[PHP_SELF]");
-    $yhendus->close();
-    exit();
-}
+session_start();
 
 if (isset($_REQUEST["delpaarinimi"]) && !empty($_REQUEST["delpaarinimi"])){
     global $yhendus;
@@ -39,7 +11,6 @@ if (isset($_REQUEST["delpaarinimi"]) && !empty($_REQUEST["delpaarinimi"])){
     $yhendus->close();
     exit();
 }
-
 if (isset($_REQUEST["punktid_null"])){
     global $yhendus;
     $kask=$yhendus->prepare("update tantsud set punktid=0 where id = ?");
@@ -80,12 +51,25 @@ if (isset($_REQUEST["naitmine"])){
 </head>
 <header>
     <h1>Tantsud tähtetega</h1>
+    <?php
+    if(isset($_SESSION['kasutaja'])){
+        ?>
+        <h1>Tere, <?="$_SESSION[kasutaja]"?></h1>
+        <a href="logaut.php">Logi välja</a>
+        <?php
+    } else {
+        ?>
+        <a href="login.php">Logi sisse</a>
+        <?php
+    }
+    ?>
     <nav>
         <a href="halduse_leht.php">Kasutaja leht</a>
+        <a href="admin_leht.php">Admin leht</a>
     </nav>
     <h2>Administreeremis leht</h2>
 </header>
-<body>
+
 <table border="1" bgcolor="#f5f5f5">
     <tr>
         <th>Tantsuspaari nimi</th>
@@ -116,22 +100,13 @@ global $yhendus;
         echo "<td>", $ava_paev, "</td>";
         echo "<td>", $komentaarid, "</td>";
         echo "<td>", $avalik, " / ", $text2, "</td>";
-        echo "<td><a href='?heatants=$id'>+1</a></td>";
-        echo "<td><a href='?bad=$id'>-1</a></td>";
         echo "<td><a href='?delpaarinimi=$id'>delete</a></td>";
         echo "<td><a href='?punktid_null=$id'>0</a></td>";
         echo "<td><a href='?$seitsud=$id'>$text</a></td>";
         echo "<tr>";
     }
 ?>
-    <form action="?">
-        <label for="uuspaar"></label>
-        <input type="text" name="paarinimi" id="paarinimi">
-        <input type="submit" value="Lisa paar">
-    </form>
 
 </table>
 </body>
 </html>
-
-<?php

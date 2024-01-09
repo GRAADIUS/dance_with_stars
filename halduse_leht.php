@@ -1,6 +1,8 @@
 <?php
 require ('conf.php');
-if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"])){
+session_start();
+
+if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"]) && is_admin()){
     global $yhendus;
     $kask=$yhendus->prepare("insert into tantsud (tantsuspar, ava_paev) values(?, now())");
     $kask->bind_param("s", $_REQUEST["paarinimi"]);
@@ -9,7 +11,6 @@ if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"])){
     $yhendus->close();
     exit();
 }
-
 if (isset($_REQUEST["heatants"])){
     global $yhendus;
     $kask=$yhendus->prepare("update tantsud set punktid=punktid+1 where id = ?");
@@ -19,7 +20,6 @@ if (isset($_REQUEST["heatants"])){
     $yhendus->close();
     exit();
 }
-
 if (isset($_REQUEST["bad"])){
     global $yhendus;
     $kask=$yhendus->prepare("update tantsud set punktid=punktid-1 where id = ?");
@@ -29,8 +29,6 @@ if (isset($_REQUEST["bad"])){
     $yhendus->close();
     exit();
 }
-
-
 if (isset($_REQUEST["delpaarinimi"]) && !empty($_REQUEST["delpaarinimi"])){
     global $yhendus;
     $kask=$yhendus->prepare("DELETE FROM tantsud WHERE id = ?");
@@ -40,7 +38,9 @@ if (isset($_REQUEST["delpaarinimi"]) && !empty($_REQUEST["delpaarinimi"])){
     $yhendus->close();
     exit();
 }
-
+function is_admin(){
+    return isset($_SESSION['onAdmin']) && $_SESSION['onAdmin'];
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -54,11 +54,30 @@ if (isset($_REQUEST["delpaarinimi"]) && !empty($_REQUEST["delpaarinimi"])){
 </head>
 <header>
     <h1>Tantsud tähtetega</h1>
-    <nav>
-        <a href="admin_leht.php">Admin leht</a>
-    </nav>
+    <?php
+    if(isset($_SESSION['kasutaja'])){
+        ?>
+        <h1>Tere, <?="$_SESSION[kasutaja]"?></h1>
+        <a href="logaut.php">Logi välja</a>
+        <?php
+    } else {
+        ?>
+        <a href="login.php">Logi sisse</a>
+        <?php
+    }
+    ?>
+    <?php if (isset($_SESSION["kasutaja"])){ ?>
+
+    <?php if (is_admin()){ ?>
+        <nav>
+            <a href="halduse_leht.php">Kasutaja leht</a>
+            <a href="admin_leht.php">Admin leht</a>
+        </nav>
+    <?php } ?>
+
     <h2>Kasutaja lisamine</h2>
 </header>
+
 <body>
 <table border="1" bgcolor="#f5f5f5">
     <tr>
@@ -78,20 +97,31 @@ global $yhendus;
         echo "<td>", $tantsuspar, "</td>";
         echo "<td>", $punktid, "</td>";
         echo "<td>", $ava_paev, "</td>";
-        echo "<td><a href='?heatants=$id'>+1</a></td>";
-        echo "<td><a href='?bad=$id'>-1</a></td>";
+        if (!is_admin()){
+            echo "<td><a href='?heatants=$id'>+1</a></td>";
+            echo "<td><a href='?bad=$id'>-1</a></td>";
+        }
         echo "<td><a href='?delpaarinimi=$id'>delete</a></td>";
         echo "<tr>";
     }
 ?>
-    <form action="?">
-        <label for="uuspaar"></label>
-        <input type="text" name="paarinimi" id="paarinimi">
-        <input type="submit" value="Lisa paar">
-    </form>
+
+<?php if (!is_admin()){ ?>
+
+<form action="?">
+    <label for="uuspaar"></label>
+    <input type="text" name="paarinimi" id="paarinimi">
+    <input type="submit" value="Lisa paar">
+</form>
+
+<?php } ?>
+<?php } ?>
 
 </table>
+<div>
+    <?php if (!isset($_SESSION['kasutaja'])){ ?>
+        <img src="meme.png" alt="meme">
+    <?php } ?>
+</div>
 </body>
 </html>
-
-<?php
