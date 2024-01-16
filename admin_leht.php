@@ -98,7 +98,7 @@ global $yhendus;
         echo "<td>", $tantsuspar, "</td>";
         echo "<td>", $punktid, "</td>";
         echo "<td>", $ava_paev, "</td>";
-        echo "<td>", $komentaarid, "</td>";
+        echo "<td>".nl2br(htmlspecialchars($komentaarid))."</td>";
         echo "<td>", $avalik, " / ", $text2, "</td>";
         echo "<td><a href='?delpaarinimi=$id'>delete</a></td>";
         echo "<td><a href='?punktid_null=$id'>0</a></td>";
