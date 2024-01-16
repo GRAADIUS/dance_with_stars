@@ -2,7 +2,7 @@
 require ('conf.php');
 session_start();
 
-if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"]) && is_admin()){
+if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"])){
     global $yhendus;
     $kask=$yhendus->prepare("insert into tantsud (tantsuspar, ava_paev) values(?, now())");
     $kask->bind_param("s", $_REQUEST["paarinimi"]);
@@ -11,12 +11,12 @@ if (isset($_REQUEST["paarinimi"]) && !empty($_REQUEST["paarinimi"]) && is_admin(
     $yhendus->close();
     exit();
 }
-if (isset($_REQUEST["komment"])){
-    if (isset($_REQUEST["uuskomment"]) && !empty($_REQUEST["paarinimi"]) && is_admin()){
+if(isset($_REQUEST["komment"])){
+    if(!empty($_REQUEST["uuskomment"])){
         global $yhendus;
-        $kask=$yhendus->prepare("update tantsud set kommentaarid = CONCAT(kommentaarid, ?) where id=?");
+        $kask = $yhendus->prepare("UPDATE tantsud SET kommentaarid=CONCAT(kommentaarid, ?) WHERE id=?");
         $kommentplus=$_REQUEST["uuskomment"]."\n";
-        $kask->bind_param("is", $kommentplus, $_REQUEST["komment"]);
+        $kask->bind_param("si", $kommentplus, $_REQUEST["komment"]);
         $kask->execute();
         header("Location: $_SERVER[PHP_SELF]");
         $yhendus->close();
@@ -78,8 +78,10 @@ function is_admin(){
         <?php
     }
     ?>
-    <?php if (isset($_SESSION["kasutaja"])){ ?>
-
+    <?php
+    if (!isset($_SESSION["kasutaja"])){
+        echo "<p>Kasutajad: admin:1234567890, opilane:1234567890</p>";
+    }?>
     <?php if (is_admin()){ ?>
         <nav>
             <a href="halduse_leht.php">Kasutaja leht</a>
@@ -101,7 +103,7 @@ function is_admin(){
 <?php
 global $yhendus;
     $kask=$yhendus->prepare("select id, tantsuspar, punktid, ava_paev, kommentaarid from tantsud where avalik = 1");
-    $kask->bind_result($id, $tantsuspar, $punktid, $ava_paev, $kommentaarid);
+    $kask->bind_result($id, $tantsuspar, $punktid, $ava_paev, $komment);
     $kask->execute();
 
     while($kask->fetch()){
@@ -110,26 +112,26 @@ global $yhendus;
         echo "<td>", $tantsuspar, "</td>";
         echo "<td>", $punktid, "</td>";
         echo "<td>", $ava_paev, "</td>";
-        echo "<td>", $kommentaarid, "</td>";
-        $kommentaarid = nl2br(htmlspecialchars($kommentaarid));
-        if (!is_admin()){
-            echo "<td><a href='?heatants=$id'>+1</a></td>";
-            echo "<td><a href='?bad=$id'>-1</a></td>";
-            echo "<td>
-                    <form action='?'>
-                    <input type='hidden' value='$id' name='komment' >
-                        <input type='text' name='uuskomment' id='uuskomment'>
-                        <input type='submit' value='OK'>
-                    </form>
-                    </td>
-                    ";
-        }
-        echo "<td><a href='?delpaarinimi=$id'>delete</a></td>";
-        echo "<tr>";
-    }
-?>
+        echo "<td>".nl2br(htmlspecialchars($komment))."</td>";
 
-<?php if (!is_admin()){ ?>
+        if (isset($_SESSION["kasutaja"])){
+            if (!is_admin()){
+                echo "<td><a href='?heatants=$id'>+1</a></td>";
+                echo "<td><a href='?bad=$id'>-1</a></td>";
+                echo "<td>
+                        <form action='?'>
+                            <input type='hidden' value='$id' name='komment' id='komment'>
+                            <input type='text' name='uuskomment' id='uuskomment'>
+                            <input type='submit' value='OK'>
+                        </form>
+                        </td>
+                        ";
+            }
+            echo "<td><a href='?delpaarinimi=$id'>delete</a></td>";
+            echo "<tr>";
+        }
+    }
+if (!is_admin() && isset($_SESSION["kasutaja"])){ ?>
 
 <form action="?">
     <label for="uuspaar"></label>
@@ -137,7 +139,6 @@ global $yhendus;
     <input type="submit" value="Lisa paar">
 </form>
 
-<?php } ?>
 <?php } ?>
 
 </table>

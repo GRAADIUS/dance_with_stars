@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <link rel="stylesheet" href="stile_log.css">
-</head>
-<body>
 <?php
 require_once("conf.php");
 global $yhendus;
@@ -44,6 +35,15 @@ if (!empty($_POST['login']) && !empty($_POST['pass'])) {
     }
 }
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="stile_log.css">
+</head>
+<body>
 <div class="container">
     <h1>Login</h1>
     <form action="" method="post">
